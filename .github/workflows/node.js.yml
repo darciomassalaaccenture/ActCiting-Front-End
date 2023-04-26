@@ -1,0 +1,43 @@
+name: Actciting frontend deployment.
+# The Event That Will Trigger Your Pipeline
+on:
+  push: 
+  # On This Branch
+    branches: 
+      - develop
+jobs:
+  build-and-deploy: 
+  # Run on the following environment
+    runs-on: ubuntu-latest
+    # Environment Variables
+    env: 
+      AWS_ACCOUNT: ${{ secrets.AWS_ACCOUNT }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}
+      CI: false
+    permissions: 
+      id-token: write
+      contents: read
+    #Enables you to run a job for different versions or operating systems
+    strategy:
+      matrix: 
+        node-version: [14.x]
+    steps: 
+        #Checks out the code that gets pushed to Develop
+      - name: Checkout
+        uses: actions/checkout@v2
+        #Installs dependencies
+      - name: NPM install
+        run: npm ci
+        #Runs the tests
+      - name: tests
+        run: npm test
+      - name: Build Stage
+        run: npm run build
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::${{env.AWS_ACCOUNT}}:role/GitHubActions
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Push changes to s3
+        run: aws s3 sync ./build s3://${{env.S3_BUCKET}}

@@ -1,0 +1,7 @@
+.all-cards {
+    display: flex;
+    grid-gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
